@@ -1,13 +1,38 @@
-import json
-from flask import Blueprint, jsonify, abort, make_response
-from .book_data import book_data_list
+from app import db
+from app.models.book import Book
+from flask import Blueprint, jsonify, abort, make_response, request
 
 books_bp = Blueprint("", __name__, url_prefix="/books")
 
+def validate_book(book_id):
+    try:
+        book_id = int(book_id)
+    except:
+        abort(make_response({"message":f"Book {book_id} is invalid."}, 400))
+    
+    book = Book.query.get(book_id)
+
+    if not book:
+        abort(make_response({"message":f"Book {book_id} not found."}, 404))
+    
+    return book
+
+@books_bp.route("", methods=["POST"])
+def create_book():
+    request_body = request.get_json()
+    new_book = Book(title=request_body["title"],
+                    description=request_body["description"])
+
+    db.session.add(new_book)
+    db.session.commit()
+
+    return make_response(f"Book {new_book.title} successfully created.", 201)
+
 @books_bp.route("", methods=["GET"])
-def complete_book_list():
+def get_all_books():
     book_list = []
-    for book in book_data_list:
+    books = Book.query.all()
+    for book in books:
         book_list.append({
             "id" : book.id,
             "title" : book.title,
@@ -15,18 +40,8 @@ def complete_book_list():
         })
     return jsonify(book_list)
 
-def validate_book(book_id):
-    try:
-        book_id = int(book_id)
-    except:
-        abort(make_response({"message":f"Book {book_id} is invalid."}, 400))
-    for book in book_data_list:
-        if book.id == book_id:
-            return book
-    abort(make_response({"message":f"Book {book_id} not found."}, 404))
-
 @books_bp.route("/<book_id>", methods=["GET"])
-def get_specific_book(book_id):
+def get_one_book(book_id):
     book = validate_book(book_id)
 
     return {
@@ -34,3 +49,17 @@ def get_specific_book(book_id):
         "title" : book.title,
         "description" : book.description
     }
+
+@books_bp.route("/<book_id>", methods=["PUT"])
+def update_book(book_id):
+    book = validate_book(book_id)
+
+    request_body = request.get_json()
+
+    book.title = request_body["title"]
+    book.description = request_body["description"]
+
+    db.session.commit()
+
+    return make_response(f"Book #{book_id} successfully updated")
+
