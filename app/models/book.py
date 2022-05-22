@@ -6,7 +6,8 @@ class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
     description = db.Column(db.String)
-
+    author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
+    author = db.relationship("Author", back_populates="books")
 
 # book_data_list = [
 #     Book(9781912688036, "Band Sinister", "A strangely sexy romp through the English countryside that explores how an infamous heathen and uptight gentleman come together against all odds."),
