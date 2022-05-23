@@ -37,6 +37,7 @@ def read_all_authors():
     for author in authors:
         authors_response.append(
             {
+                "id" : author.id,
                 "name": author.name
             }
         )
@@ -72,4 +73,6 @@ def read_books(author_id):
             }
         )
     return jsonify(books_response)
+
+    
 

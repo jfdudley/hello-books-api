@@ -1,5 +1,9 @@
 from app import db
 from app.models.book import Book
+from app.models.genre import Genre
+from app.models.author import Author
+from app.author_routes import validate_author
+from app.genre_routes import validate_genre
 from flask import Blueprint, jsonify, abort, make_response, request
 
 books_bp = Blueprint("books_bp", __name__, url_prefix="/books")
@@ -33,11 +37,7 @@ def get_all_books():
     book_list = []
     books = Book.query.all()
     for book in books:
-        book_list.append({
-            "id" : book.id,
-            "title" : book.title,
-            "description" : book.description
-        })
+        book_list.append(book.to_dict())
     return jsonify(book_list)
 
 @books_bp.route("/<book_id>", methods=["GET"])
@@ -71,3 +71,37 @@ def delete_book(book_id):
     db.session.commit()
 
     return make_response(jsonify(f"Book #{book_id} successfully deleted."))
+
+
+# Nested Routes
+
+@books_bp.route("/<book_id>/author", methods=["POST"])
+def add_author_to_book(book_id):
+    book = validate_book(book_id)
+    request_body = request.get_json()
+
+    if "id" in request_body:
+        author = validate_author(request_body["id"])
+    else:
+        author = Author.query.filter_by(name=request_body["name"]).one()
+
+    book.author = author
+
+    db.session.commit()
+
+    return jsonify(book.to_dict())
+
+@books_bp.route("/<book_id>/genres", methods=["POST"])
+def add_genre_to_book(book_id):
+    book = validate_book(book_id)
+    request_body = request.get_json()
+    if "id" in request_body:
+        genre = validate_genre(request_body["id"])
+    else:
+        genre = Genre.query.filter_by(name=request_body["name"]).one()
+
+    book.genres.append(genre)
+
+    db.session.commit()
+
+    return jsonify(book.to_dict())
