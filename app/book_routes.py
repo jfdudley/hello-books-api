@@ -82,14 +82,15 @@ def add_author_to_book(book_id):
 
     if "id" in request_body:
         author = validate_author(request_body["id"])
-    else:
+    try:
         author = Author.query.filter_by(name=request_body["name"]).one()
+    except:
+        abort(make_response({"message":f"Author {request_body} not found."}, 404))
 
     book.author = author
-
     db.session.commit()
-
     return jsonify(book.to_dict())
+
 
 @books_bp.route("/<book_id>/genres", methods=["POST"])
 def add_genre_to_book(book_id):
@@ -97,8 +98,10 @@ def add_genre_to_book(book_id):
     request_body = request.get_json()
     if "id" in request_body:
         genre = validate_genre(request_body["id"])
-    else:
+    try:
         genre = Genre.query.filter_by(name=request_body["name"]).one()
+    except:
+        abort(make_response({"message":f"Genre {request_body} not found."}, 404))
 
     book.genres.append(genre)
 
