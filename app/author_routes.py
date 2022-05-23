@@ -74,5 +74,14 @@ def read_books(author_id):
         )
     return jsonify(books_response)
 
+@authors_bp.route("/<author_id>", methods=["DELETE"])
+def delete_author(author_id):
+    author = validate_author(author_id)
+
+    db.session.delete(author)
+    db.session.commit()
+
+    return make_response(jsonify(f"Author {author.name} successfully deleted."))
+
     
 
