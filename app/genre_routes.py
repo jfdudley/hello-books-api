@@ -101,13 +101,5 @@ def get_all_books(genre_id):
     
     return jsonify(books_response)
 
-@genres_bp.route("/<genre_id>", methods=["DELETE"])
-def delete_genre(genre_id):
-    genre = validate_genre(genre_id)
-
-    db.session.delete(genre)
-    db.session.commit()
-
-    return make_response(jsonify(f"Genre {genre.name} successfully deleted."))
 
     
